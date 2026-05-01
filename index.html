@@ -1,0 +1,973 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMO Executive Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090f;--bg2:#0d1117;--bg3:#111520;--bg4:#161c28;
+  --card:#12172280;--card2:#1a2035;--card3:#0f1420;
+  --border:#ffffff0f;--border2:#ffffff18;--border3:#ffffff25;
+  --text:#f0f4ff;--text2:#8b95b0;--text3:#5a6480;
+  --blue:#3b82f6;--blue2:#60a5fa;--blue3:#1d4ed8;
+  --purple:#a855f7;--purple2:#c084fc;--purple3:#7c3aed;
+  --green:#10b981;--green2:#34d399;--green3:#059669;
+  --orange:#f59e0b;--orange2:#fbbf24;--orange3:#d97706;
+  --red:#ef4444;--red2:#f87171;--red3:#dc2626;
+  --teal:#06b6d4;--teal2:#22d3ee;--teal3:#0891b2;
+  --pink:#ec4899;--pink2:#f472b6;
+  --glow-blue:0 0 30px #3b82f630;--glow-purple:0 0 30px #a855f730;
+  --glow-green:0 0 30px #10b98130;--glow-orange:0 0 30px #f59e0b30;
+  --glow-red:0 0 30px #ef444430;--glow-teal:0 0 30px #06b6d430;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.glass{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px}
+.glass2{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid var(--border2);border-radius:12px}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0d1117 0%,#111825 50%,#0a1628 100%);border-bottom:1px solid var(--border2);padding:0 32px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;height:72px}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-badge{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;box-shadow:0 0 20px #3b82f640}
+.header-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.5px}
+.header-title span{background:linear-gradient(135deg,var(--blue2),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.header-right{display:flex;align-items:center;gap:12px}
+.live-badge{display:flex;align-items:center;gap:6px;background:#10b98115;border:1px solid #10b98130;border-radius:20px;padding:4px 12px;font-size:11px;color:var(--green2);font-weight:500}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}
+.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:24px;padding:6px 14px 6px 6px}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.user-name{font-size:12px;font-weight:500;color:var(--text2)}
+.datetime{font-size:12px;color:var(--text3);text-align:right}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 72px)}
+.sidebar{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:16px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.nav-section{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:12px 8px 6px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:13px;color:var(--text2);border:1px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:var(--text);border-color:var(--border2)}
+.nav-item.active{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(168,85,247,0.15));color:var(--blue2);border-color:rgba(59,130,246,0.3)}
+.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.nav-item.active .nav-dot{background:var(--blue2);box-shadow:0 0 8px var(--blue)}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+
+/* FILTERS BAR */
+.filters-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-group{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:6px 10px}
+.filter-label{font-size:11px;color:var(--text3);white-space:nowrap}
+select,input[type="date"]{background:transparent;border:none;color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer}
+select option{background:var(--bg3);color:var(--text)}
+.upload-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(168,85,247,0.2));border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:12px;color:var(--blue2);font-weight:500;transition:all 0.2s;margin-left:auto}
+.upload-btn:hover{background:linear-gradient(135deg,rgba(59,130,246,0.3),rgba(168,85,247,0.3));box-shadow:var(--glow-blue)}
+.update-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--blue3),var(--purple3));border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:12px;color:#fff;font-weight:600;transition:all 0.2s}
+.update-btn:hover{opacity:0.9;transform:translateY(-1px);box-shadow:var(--glow-blue)}
+
+/* DATA UPLOAD PANEL */
+.upload-panel{display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:20px}
+.upload-panel.visible{display:block}
+.upload-panel h3{font-family:'Syne',sans-serif;font-size:14px;margin-bottom:12px;color:var(--text)}
+.upload-area{border:2px dashed var(--border3);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s}
+.upload-area:hover{border-color:var(--blue);background:rgba(59,130,246,0.05)}
+.upload-area p{color:var(--text3);font-size:13px}
+.upload-area strong{color:var(--blue2)}
+textarea.data-input{width:100%;height:100px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;resize:vertical;margin-top:10px}
+textarea.data-input::placeholder{color:var(--text3)}
+#fileInput{display:none}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.kpi-card{border-radius:14px;padding:16px;position:relative;overflow:hidden;cursor:default;transition:transform 0.2s}
+.kpi-card:hover{transform:translateY(-2px)}
+.kpi-card::before{content:'';position:absolute;inset:0;border-radius:14px;opacity:0.6}
+.kpi-card.blue{background:linear-gradient(135deg,#1e3a5f,#1d3a7a);border:1px solid rgba(59,130,246,0.3);box-shadow:var(--glow-blue)}
+.kpi-card.purple{background:linear-gradient(135deg,#2d1b69,#3b0f8a);border:1px solid rgba(168,85,247,0.3);box-shadow:var(--glow-purple)}
+.kpi-card.green{background:linear-gradient(135deg,#064e3b,#065f46);border:1px solid rgba(16,185,129,0.3);box-shadow:var(--glow-green)}
+.kpi-card.orange{background:linear-gradient(135deg,#78350f,#92400e);border:1px solid rgba(245,158,11,0.3);box-shadow:var(--glow-orange)}
+.kpi-card.red{background:linear-gradient(135deg,#7f1d1d,#991b1b);border:1px solid rgba(239,68,68,0.3);box-shadow:var(--glow-red)}
+.kpi-card.teal{background:linear-gradient(135deg,#0e4f5c,#065a6b);border:1px solid rgba(6,182,212,0.3);box-shadow:var(--glow-teal)}
+.kpi-card.pink{background:linear-gradient(135deg,#831843,#9d174d);border:1px solid rgba(236,72,153,0.3)}
+.kpi-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:14px}
+.kpi-label{font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.8px;font-weight:500;margin-bottom:4px}
+.kpi-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;line-height:1}
+.kpi-change{font-size:11px;display:flex;align-items:center;gap:3px}
+.kpi-change.up{color:#34d399}
+.kpi-change.down{color:#f87171}
+.kpi-change.neutral{color:rgba(255,255,255,0.5)}
+
+/* SECTION HEADERS */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';width:3px;height:16px;border-radius:2px;background:linear-gradient(180deg,var(--blue),var(--purple))}
+.section-badge{font-size:10px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);color:var(--blue2);padding:3px 8px;border-radius:20px;font-weight:500}
+.view-all{font-size:11px;color:var(--text3);cursor:pointer;transition:color 0.2s}
+.view-all:hover{color:var(--blue2)}
+
+/* MODULE GRID */
+.module-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.module-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.module-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+.module-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:18px;transition:border-color 0.2s}
+.module-card:hover{border-color:var(--border3)}
+
+/* CHARTS */
+.chart-container{position:relative;width:100%}
+
+/* STATUS INDICATORS */
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.status-row:last-child{border-bottom:none}
+.status-name{font-size:12px;color:var(--text2)}
+.status-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;margin:0 10px;overflow:hidden}
+.status-bar{height:100%;border-radius:3px;transition:width 0.8s ease}
+.status-val{font-size:12px;font-weight:600;min-width:36px;text-align:right}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.pill.green{background:rgba(16,185,129,0.15);color:var(--green2);border:1px solid rgba(16,185,129,0.25)}
+.pill.red{background:rgba(239,68,68,0.15);color:var(--red2);border:1px solid rgba(239,68,68,0.25)}
+.pill.orange{background:rgba(245,158,11,0.15);color:var(--orange2);border:1px solid rgba(245,158,11,0.25)}
+.pill.blue{background:rgba(59,130,246,0.15);color:var(--blue2);border:1px solid rgba(59,130,246,0.25)}
+
+/* ALERTS SECTION */
+.alert-card{background:var(--bg3);border-radius:14px;padding:16px;border-left:3px solid;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.alert-card.danger{border-color:var(--red);background:rgba(239,68,68,0.05)}
+.alert-card.warning{border-color:var(--orange);background:rgba(245,158,11,0.05)}
+.alert-card.info{border-color:var(--blue);background:rgba(59,130,246,0.05)}
+.alert-card.success{border-color:var(--green);background:rgba(16,185,129,0.05)}
+.alert-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.alert-card.danger .alert-icon{background:rgba(239,68,68,0.15)}
+.alert-card.warning .alert-icon{background:rgba(245,158,11,0.15)}
+.alert-card.info .alert-icon{background:rgba(59,130,246,0.15)}
+.alert-card.success .alert-icon{background:rgba(16,185,129,0.15)}
+.alert-title{font-size:12px;font-weight:600;margin-bottom:3px}
+.alert-card.danger .alert-title{color:var(--red2)}
+.alert-card.warning .alert-title{color:var(--orange2)}
+.alert-card.info .alert-title{color:var(--blue2)}
+.alert-card.success .alert-title{color:var(--green2)}
+.alert-desc{font-size:11px;color:var(--text3)}
+.alert-time{font-size:10px;color:var(--text3);margin-left:auto;white-space:nowrap}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;padding:8px 10px;border-bottom:1px solid var(--border2);text-align:left}
+.data-table td{font-size:12px;color:var(--text2);padding:9px 10px;border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* COMPLIANCE GAUGE */
+.compliance-ring{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ring-label{font-size:11px;color:var(--text3);text-align:center}
+.ring-value{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+
+/* PROGRESS BARS */
+.progress-item{margin-bottom:12px}
+.progress-header{display:flex;justify-content:space-between;margin-bottom:5px}
+.progress-name{font-size:12px;color:var(--text2)}
+.progress-val{font-size:12px;font-weight:600}
+.progress-track{height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width 1s ease}
+
+/* DIVIDER */
+.section-divider{border:none;border-top:1px solid var(--border);margin:4px 0}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:2px}
+
+/* MINI STAT */
+.mini-stat{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.mini-stat:last-child{border-bottom:none}
+.mini-stat-label{font-size:12px;color:var(--text2)}
+.mini-stat-val{font-size:13px;font-weight:600;color:var(--text)}
+
+/* TAB NAV */
+.tab-nav{display:flex;gap:4px;background:rgba(255,255,255,0.03);border-radius:8px;padding:3px}
+.tab-btn{padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--text3);transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.tab-btn.active{background:rgba(59,130,246,0.2);color:var(--blue2)}
+
+/* SECTION WRAPPER */
+.section-wrap{display:none}
+.section-wrap.visible{display:block}
+
+/* Responsive */
+@media(max-width:1400px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.module-grid-4{grid-template-columns:1fr 1fr}.sidebar{width:180px;min-width:180px}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-badge">CMO</div>
+    <div>
+      <div class="header-title">CMO <span>Intelligence Hub</span></div>
+      <div class="header-sub">Chief Medical Officer Executive Dashboard · Al-Madinah Hospital</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>Live</div>
+    <div class="datetime" id="datetime-display"></div>
+    <div class="user-badge">
+      <div class="user-avatar">AB</div>
+      <span class="user-name">Dr. Abdulaziz Bakhsh</span>
+    </div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showSection('overview',this)"><div class="nav-dot" style="background:var(--blue2)"></div>Executive Summary</div>
+    <div class="nav-section">Clinical</div>
+    <div class="nav-item" onclick="showSection('outpatients',this)"><div class="nav-dot" style="background:var(--teal)"></div>Outpatients</div>
+    <div class="nav-item" onclick="showSection('admissions',this)"><div class="nav-dot" style="background:var(--blue)"></div>Admissions</div>
+    <div class="nav-item" onclick="showSection('discharges',this)"><div class="nav-dot" style="background:var(--green)"></div>Discharges</div>
+    <div class="nav-item" onclick="showSection('los',this)"><div class="nav-dot" style="background:var(--purple)"></div>Length of Stay</div>
+    <div class="nav-item" onclick="showSection('umrah',this)"><div class="nav-dot" style="background:var(--orange)"></div>Umrah Patients</div>
+    <div class="nav-section">Performance</div>
+    <div class="nav-item" onclick="showSection('cmi',this)"><div class="nav-dot" style="background:var(--teal)"></div>Case Mix Index</div>
+    <div class="nav-item" onclick="showSection('oppe',this)"><div class="nav-dot" style="background:var(--pink)"></div>OPPE</div>
+    <div class="nav-item" onclick="showSection('documentation',this)"><div class="nav-dot" style="background:var(--orange)"></div>Documentation</div>
+    <div class="nav-section">Safety & Quality</div>
+    <div class="nav-item" onclick="showSection('quality',this)"><div class="nav-dot" style="background:var(--red)"></div>Quality & Safety</div>
+    <div class="nav-item" onclick="showSection('ed',this)"><div class="nav-dot" style="background:var(--blue)"></div>Emergency Dept</div>
+    <div class="nav-item" onclick="showSection('surgical',this)"><div class="nav-dot" style="background:var(--purple)"></div>Surgical</div>
+    <div class="nav-section">Patient & Accreditation</div>
+    <div class="nav-item" onclick="showSection('experience',this)"><div class="nav-dot" style="background:var(--green)"></div>Patient Experience</div>
+    <div class="nav-item" onclick="showSection('accreditation',this)"><div class="nav-dot" style="background:var(--teal)"></div>Accreditation</div>
+    <div class="nav-item" onclick="showSection('resources',this)"><div class="nav-dot" style="background:var(--orange)"></div>Resource Utilization</div>
+    <div class="nav-section">CMO Intelligence</div>
+    <div class="nav-item" onclick="showSection('alerts',this)"><div class="nav-dot" style="background:var(--red)"></div>Alerts & Insights</div>
+    <div class="nav-item" onclick="showSection('upload',this)"><div class="nav-dot" style="background:var(--purple)"></div>Data Upload</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main" id="main-content">
+    <!-- FILTERS -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <span class="filter-label">Period</span>
+        <input type="date" value="2025-01-01" id="dateFrom">
+        <span style="color:var(--text3);font-size:12px">–</span>
+        <input type="date" value="2025-12-31" id="dateTo">
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Dept</span>
+        <select id="deptFilter"><option>All Departments</option><option>Internal Medicine</option><option>Surgery</option><option>Cardiology</option><option>Pediatrics</option><option>OB/GYN</option><option>Orthopedics</option><option>ICU</option><option>Emergency</option></select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Physician</span>
+        <select id="physicianFilter"><option>All Physicians</option><option>Dr. Al-Rashidi</option><option>Dr. Yamani</option><option>Dr. Khalid</option><option>Dr. Nasser</option><option>Dr. Saeed</option></select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Type</span>
+        <select id="typeFilter"><option>All Types</option><option>Outpatient</option><option>Inpatient</option><option>Umrah</option></select>
+      </div>
+      <button class="upload-btn" onclick="toggleUpload()">⬆ Upload Data</button>
+      <button class="update-btn" onclick="refreshDashboard()">↻ Update Dashboard</button>
+    </div>
+
+    <!-- DATA UPLOAD PANEL -->
+    <div class="upload-panel" id="uploadPanel">
+      <h3>📂 Data Upload Center</h3>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:14px">Upload CSV/Excel files or paste data below. Dashboard will auto-map column names intelligently.</p>
+      <div class="module-grid-2" style="gap:12px">
+        <div>
+          <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <p style="font-size:28px;margin-bottom:8px">📊</p>
+            <p><strong>Drop file or click to upload</strong></p>
+            <p style="margin-top:4px;font-size:11px">Supports CSV, XLSX, JSON</p>
+          </div>
+          <input type="file" id="fileInput" accept=".csv,.xlsx,.json" onchange="handleFileUpload(event)">
+        </div>
+        <div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:6px">Or paste data directly:</p>
+          <textarea class="data-input" id="dataInput" placeholder='Paste CSV data here...&#10;Example:&#10;Department,Visits,Admissions,LOS&#10;Internal Medicine,1200,320,4.2&#10;Surgery,890,210,3.8&#10;...'></textarea>
+          <button onclick="processTextData()" style="margin-top:8px;padding:6px 14px;background:rgba(168,85,247,0.2);border:1px solid rgba(168,85,247,0.3);color:var(--purple2);border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit">Parse & Apply Data</button>
+        </div>
+      </div>
+      <div id="uploadStatus" style="margin-top:10px;font-size:12px;color:var(--text3)"></div>
+    </div>
+
+    <!-- ===== SECTION: OVERVIEW ===== -->
+    <div id="sec-overview" class="section-wrap visible">
+      <!-- KPI CARDS -->
+      <div class="kpi-grid" style="margin-bottom:20px">
+        <div class="kpi-card blue">
+          <div class="kpi-icon" style="background:rgba(59,130,246,0.2)">🏥</div>
+          <div class="kpi-label">Total OP Visits</div>
+          <div class="kpi-value" id="kpi-op">48,240</div>
+          <div class="kpi-change up">▲ 8.2% vs last period</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-icon" style="background:rgba(168,85,247,0.2)">🛏</div>
+          <div class="kpi-label">Total Admissions</div>
+          <div class="kpi-value" id="kpi-adm">12,430</div>
+          <div class="kpi-change up">▲ 5.1% vs last period</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon" style="background:rgba(16,185,129,0.2)">✅</div>
+          <div class="kpi-label">Total Discharges</div>
+          <div class="kpi-value" id="kpi-dis">12,104</div>
+          <div class="kpi-change up">▲ 4.8% vs last period</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-icon" style="background:rgba(245,158,11,0.2)">📅</div>
+          <div class="kpi-label">Avg LOS (days)</div>
+          <div class="kpi-value" id="kpi-los">4.2</div>
+          <div class="kpi-change down">▼ 0.3 vs benchmark</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="kpi-icon" style="background:rgba(6,182,212,0.2)">📈</div>
+          <div class="kpi-label">Overall CMI</div>
+          <div class="kpi-value" id="kpi-cmi">1.42</div>
+          <div class="kpi-change up">▲ 0.08 vs last yr</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-icon" style="background:rgba(239,68,68,0.2)">🏨</div>
+          <div class="kpi-label">Bed Occupancy</div>
+          <div class="kpi-value" id="kpi-bed">84%</div>
+          <div class="kpi-change neutral">Target: 85%</div>
+        </div>
+        <div class="kpi-card pink">
+          <div class="kpi-icon" style="background:rgba(236,72,153,0.2)">📋</div>
+          <div class="kpi-label">Compliance %</div>
+          <div class="kpi-value" id="kpi-comp">89%</div>
+          <div class="kpi-change down">▼ Below 95% target</div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 1 -->
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Monthly Visit Trends</div><div class="section-badge">2025</div></div>
+          <div class="chart-container" style="height:200px"><canvas id="trendChart" aria-label="Monthly visit trends 2025">Monthly clinical activity data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Department Breakdown</div><span class="view-all">See all →</span></div>
+          <div class="chart-container" style="height:200px"><canvas id="deptChart" aria-label="Department breakdown">Department distribution data</canvas></div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 2 -->
+      <div class="module-grid-3" style="margin-top:16px">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Admission Types</div></div>
+          <div class="chart-container" style="height:160px"><canvas id="admTypeChart" aria-label="Admission types distribution">Admission types</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">LOS by Department</div></div>
+          <div class="chart-container" style="height:160px"><canvas id="losChart" aria-label="LOS by department">LOS data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Top Physicians — Productivity</div></div>
+          <div style="padding-top:4px">
+            <div class="status-row"><span class="status-name">Dr. Al-Rashidi</span><div class="status-bar-wrap"><div class="status-bar" style="width:92%;background:linear-gradient(90deg,var(--blue),var(--blue2))"></div></div><span class="status-val" style="color:var(--blue2)">92%</span></div>
+            <div class="status-row"><span class="status-name">Dr. Yamani</span><div class="status-bar-wrap"><div class="status-bar" style="width:87%;background:linear-gradient(90deg,var(--purple),var(--purple2))"></div></div><span class="status-val" style="color:var(--purple2)">87%</span></div>
+            <div class="status-row"><span class="status-name">Dr. Khalid</span><div class="status-bar-wrap"><div class="status-bar" style="width:78%;background:linear-gradient(90deg,var(--green),var(--green2))"></div></div><span class="status-val" style="color:var(--green2)">78%</span></div>
+            <div class="status-row"><span class="status-name">Dr. Nasser</span><div class="status-bar-wrap"><div class="status-bar" style="width:71%;background:linear-gradient(90deg,var(--orange),var(--orange2))"></div></div><span class="status-val" style="color:var(--orange2)">71%</span></div>
+            <div class="status-row"><span class="status-name">Dr. Saeed</span><div class="status-bar-wrap"><div class="status-bar" style="width:65%;background:linear-gradient(90deg,var(--red),var(--red2))"></div></div><span class="status-val" style="color:var(--red2)">65%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: OUTPATIENTS ===== -->
+    <div id="sec-outpatients" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(6,182,212,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.8px">Total Visits</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--teal2)">48,240</div><div style="font-size:11px;color:var(--text3)">YTD 2025</div></div>
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.8px">New Patients</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue2)">18,320</div><div class="pill blue" style="font-size:10px">38% of total</div></div>
+        <div class="module-card" style="border-color:rgba(168,85,247,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.8px">Follow-Up</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--purple2)">29,920</div><div class="pill" style="background:rgba(168,85,247,0.15);color:var(--purple2);border:1px solid rgba(168,85,247,0.25);font-size:10px">62% of total</div></div>
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.8px">Avg Daily Visits</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green2)">132</div><div style="font-size:11px;color:var(--text3)">Working days basis</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Visits by Department</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="opDeptChart" aria-label="Outpatient visits by department">OP department data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Monthly OP Trends</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="opTrendChart" aria-label="Monthly outpatient trends">OP monthly trend</canvas></div>
+        </div>
+      </div>
+      <div class="module-card" style="margin-top:16px">
+        <div class="section-header"><div class="section-title">Visits by Physician</div></div>
+        <table class="data-table">
+          <thead><tr><th>Physician</th><th>Specialty</th><th>New</th><th>Follow-Up</th><th>Total</th><th>% Share</th><th>Trend</th></tr></thead>
+          <tbody>
+            <tr><td>Dr. Al-Rashidi</td><td>Internal Med</td><td>2,840</td><td>4,210</td><td>7,050</td><td><span class="pill blue">14.6%</span></td><td style="color:var(--green2)">▲</td></tr>
+            <tr><td>Dr. Yamani</td><td>Cardiology</td><td>1,920</td><td>3,440</td><td>5,360</td><td><span class="pill green">11.1%</span></td><td style="color:var(--green2)">▲</td></tr>
+            <tr><td>Dr. Khalid</td><td>Surgery</td><td>1,640</td><td>2,890</td><td>4,530</td><td><span class="pill blue">9.4%</span></td><td style="color:var(--orange2)">→</td></tr>
+            <tr><td>Dr. Nasser</td><td>Orthopedics</td><td>1,280</td><td>2,540</td><td>3,820</td><td><span class="pill orange">7.9%</span></td><td style="color:var(--red2)">▼</td></tr>
+            <tr><td>Dr. Saeed</td><td>Pediatrics</td><td>2,100</td><td>3,650</td><td>5,750</td><td><span class="pill green">11.9%</span></td><td style="color:var(--green2)">▲</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: ADMISSIONS ===== -->
+    <div id="sec-admissions" class="section-wrap">
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Admissions by Department</div></div>
+          <div class="chart-container" style="height:240px"><canvas id="admDeptChart" aria-label="Admissions by department">Admissions department data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Emergency vs Elective</div></div>
+          <div class="chart-container" style="height:240px"><canvas id="admTypeChart2" aria-label="Emergency vs elective admissions">Admission type data</canvas></div>
+        </div>
+      </div>
+      <div class="module-card" style="margin-top:16px">
+        <div class="section-header"><div class="section-title">Monthly Admission Trends</div><div class="section-badge">12-Month View</div></div>
+        <div class="chart-container" style="height:180px"><canvas id="admTrendChart" aria-label="Monthly admissions trend">Admissions trend data</canvas></div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: LOS ===== -->
+    <div id="sec-los" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(168,85,247,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Average LOS</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--purple2)">4.2 days</div><div style="font-size:11px;color:var(--green2)">Within benchmark</div></div>
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Long Stay (>7d)</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red2)">248</div><div style="font-size:11px;color:var(--red2)">Current patients</div></div>
+        <div class="module-card" style="border-color:rgba(245,158,11,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Highest LOS Dept</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--orange2)">Internal Med</div><div style="font-size:11px;color:var(--text3)">6.8 days avg</div></div>
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Lowest LOS Dept</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green2)">Same Day</div><div style="font-size:11px;color:var(--text3)">0.8 days avg</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">LOS by Department vs Benchmark</div></div>
+          <div style="padding-top:4px">
+            <div class="progress-item"><div class="progress-header"><span class="progress-name">Internal Medicine</span><span class="progress-val" style="color:var(--red2)">6.8d ↑ above</span></div><div class="progress-track"><div class="progress-fill" style="width:85%;background:linear-gradient(90deg,var(--red3),var(--red2))"></div></div></div>
+            <div class="progress-item"><div class="progress-header"><span class="progress-name">Surgery</span><span class="progress-val" style="color:var(--orange2)">5.2d → near</span></div><div class="progress-track"><div class="progress-fill" style="width:65%;background:linear-gradient(90deg,var(--orange3),var(--orange2))"></div></div></div>
+            <div class="progress-item"><div class="progress-header"><span class="progress-name">Cardiology</span><span class="progress-val" style="color:var(--orange2)">4.8d → near</span></div><div class="progress-track"><div class="progress-fill" style="width:60%;background:linear-gradient(90deg,var(--orange3),var(--orange2))"></div></div></div>
+            <div class="progress-item"><div class="progress-header"><span class="progress-name">Pediatrics</span><span class="progress-val" style="color:var(--green2)">3.4d ✓ target</span></div><div class="progress-track"><div class="progress-fill" style="width:43%;background:linear-gradient(90deg,var(--green3),var(--green2))"></div></div></div>
+            <div class="progress-item"><div class="progress-header"><span class="progress-name">Orthopedics</span><span class="progress-val" style="color:var(--green2)">3.8d ✓ target</span></div><div class="progress-track"><div class="progress-fill" style="width:48%;background:linear-gradient(90deg,var(--green3),var(--green2))"></div></div></div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">LOS Trends (Monthly)</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="losTrendChart" aria-label="LOS monthly trends">LOS trends</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: UMRAH ===== -->
+    <div id="sec-umrah" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(245,158,11,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Total Umrah Patients</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange2)">8,420</div></div>
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Outpatient</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue2)">6,840</div><div class="pill blue" style="font-size:10px">81%</div></div>
+        <div class="module-card" style="border-color:rgba(168,85,247,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Inpatient</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--purple2)">1,580</div><div class="pill" style="background:rgba(168,85,247,0.15);color:var(--purple2);border:1px solid rgba(168,85,247,0.25);font-size:10px">19%</div></div>
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Nationalities</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green2)">42</div><div style="font-size:11px;color:var(--text3)">Countries represented</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Top Nationalities</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="umrahNatChart" aria-label="Umrah nationalities">Nationality data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Monthly Umrah Volume</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="umrahTrendChart" aria-label="Umrah monthly trend">Umrah trend</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: DOCUMENTATION ===== -->
+    <div id="sec-documentation" class="section-wrap">
+      <div class="module-grid-3" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)">
+          <div class="section-header" style="margin-bottom:10px"><div class="section-title" style="font-size:12px">Discharge Summary</div><span class="pill green">Target: 95%</span></div>
+          <div style="display:flex;align-items:baseline;gap:8px"><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--green2)">91%</div><div style="font-size:12px;color:var(--text3)">compliant</div></div>
+          <div style="margin-top:10px"><div class="progress-track" style="height:10px"><div class="progress-fill" style="width:91%;background:linear-gradient(90deg,var(--green3),var(--green2))"></div></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px"><span style="color:var(--green2)">✓ 9,114 Compliant</span><span style="color:var(--red2)">✗ 910 Missing</span><span style="color:var(--orange2)">⏳ 80 Pending</span></div>
+        </div>
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)">
+          <div class="section-header" style="margin-bottom:10px"><div class="section-title" style="font-size:12px">Operative Reports</div><span class="pill red">Target: 100%</span></div>
+          <div style="display:flex;align-items:baseline;gap:8px"><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--orange2)">82%</div><div style="font-size:12px;color:var(--text3)">compliant</div></div>
+          <div style="margin-top:10px"><div class="progress-track" style="height:10px"><div class="progress-fill" style="width:82%;background:linear-gradient(90deg,var(--red3),var(--orange2))"></div></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px"><span style="color:var(--green2)">✓ 2,870 Done</span><span style="color:var(--red2)">✗ 630 Missing</span><span style="color:var(--orange2)">⏳ 120 Late</span></div>
+        </div>
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)">
+          <div class="section-header" style="margin-bottom:10px"><div class="section-title" style="font-size:12px">Progress Notes</div><span class="pill blue">Target: 95%</span></div>
+          <div style="display:flex;align-items:baseline;gap:8px"><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--blue2)">94%</div><div style="font-size:12px;color:var(--text3)">compliant</div></div>
+          <div style="margin-top:10px"><div class="progress-track" style="height:10px"><div class="progress-fill" style="width:94%;background:linear-gradient(90deg,var(--blue3),var(--blue2))"></div></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px"><span style="color:var(--green2)">✓ 11,280 Compliant</span><span style="color:var(--red2)">✗ 720 Deficient</span></div>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="section-header"><div class="section-title">Department-Level Compliance</div><div class="section-badge">vs 95% Target</div></div>
+        <div class="chart-container" style="height:200px"><canvas id="complianceChart" aria-label="Documentation compliance by department">Compliance data</canvas></div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: QUALITY ===== -->
+    <div id="sec-quality" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Mortality Rate</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red2)">1.2%</div><div class="pill green" style="font-size:10px">Within target &lt;1.5%</div></div>
+        <div class="module-card" style="border-color:rgba(245,158,11,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Readmission Rate</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange2)">8.4%</div><div class="pill green" style="font-size:10px">Below 10% target</div></div>
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Sentinel Events</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red2)">3</div><div class="pill red" style="font-size:10px">Target: 0</div></div>
+        <div class="module-card" style="border-color:rgba(168,85,247,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Hospital-Acquired Inf.</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--purple2)">0.8%</div><div class="pill orange" style="font-size:10px">Benchmark: &lt;0.5%</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Adverse Events by Category</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="adverseChart" aria-label="Adverse events by category">Adverse events data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Safety Indicators Dashboard</div></div>
+          <div style="padding-top:4px">
+            <div class="status-row"><span class="status-name">Medication Errors</span><div class="status-bar-wrap"><div class="status-bar" style="width:34%;background:linear-gradient(90deg,var(--orange3),var(--orange2))"></div></div><span class="status-val" style="color:var(--orange2)">34</span></div>
+            <div class="status-row"><span class="status-name">Patient Falls</span><div class="status-bar-wrap"><div class="status-bar" style="width:22%;background:linear-gradient(90deg,var(--blue3),var(--blue2))"></div></div><span class="status-val" style="color:var(--blue2)">22</span></div>
+            <div class="status-row"><span class="status-name">Pressure Injuries</span><div class="status-bar-wrap"><div class="status-bar" style="width:15%;background:linear-gradient(90deg,var(--purple3),var(--purple2))"></div></div><span class="status-val" style="color:var(--purple2)">15</span></div>
+            <div class="status-row"><span class="status-name">Adverse Drug Events</span><div class="status-bar-wrap"><div class="status-bar" style="width:28%;background:linear-gradient(90deg,var(--red3),var(--red2))"></div></div><span class="status-val" style="color:var(--red2)">28</span></div>
+            <div class="status-row"><span class="status-name">HAI Rate</span><div class="status-bar-wrap"><div class="status-bar" style="width:80%;background:linear-gradient(90deg,var(--red3),var(--orange2))"></div></div><span class="status-val" style="color:var(--orange2)">0.8%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: ED ===== -->
+    <div id="sec-ed" class="section-wrap">
+      <div class="module-grid-3" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">ED Visits</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red2)">18,640</div></div>
+        <div class="module-card" style="border-color:rgba(245,158,11,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Door-to-Doctor</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange2)">18 min</div><div class="pill green" style="font-size:10px">Target: &lt;20 min</div></div>
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">LWBS Rate</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue2)">2.1%</div><div class="pill orange" style="font-size:10px">Target: &lt;2%</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">ED Wait Time Distribution</div></div>
+          <div class="chart-container" style="height:200px"><canvas id="edWaitChart" aria-label="ED wait time distribution">Wait time data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">ED KPIs</div></div>
+          <div class="mini-stat"><span class="mini-stat-label">Average Wait Time</span><span class="mini-stat-val" style="color:var(--orange2)">42 min</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Average ED LOS</span><span class="mini-stat-val">3.8 hrs</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Admission Conversion Rate</span><span class="mini-stat-val" style="color:var(--blue2)">24%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Left Without Being Seen</span><span class="mini-stat-val" style="color:var(--orange2)">392</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Critical (ESI 1-2)</span><span class="mini-stat-val" style="color:var(--red2)">18%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Patient Satisfaction (ED)</span><span class="mini-stat-val" style="color:var(--green2)">78%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: OPPE ===== -->
+    <div id="sec-oppe" class="section-wrap">
+      <div class="module-card" style="margin-bottom:16px">
+        <div class="section-header"><div class="section-title">Physician Performance Overview (OPPE)</div><div class="section-badge">Live</div></div>
+        <table class="data-table">
+          <thead><tr><th>Physician</th><th>Department</th><th>Productivity</th><th>Quality Score</th><th>Compliance</th><th>CMI</th><th>Readmission</th><th>Overall</th></tr></thead>
+          <tbody>
+            <tr><td><strong style="color:var(--text)">Dr. Al-Rashidi</strong></td><td>Internal Med</td><td><span class="pill green">92%</span></td><td><span class="pill green">88%</span></td><td><span class="pill orange">83%</span></td><td>1.58</td><td style="color:var(--orange2)">11.2%</td><td><span class="pill green">A</span></td></tr>
+            <tr><td><strong style="color:var(--text)">Dr. Yamani</strong></td><td>Cardiology</td><td><span class="pill green">87%</span></td><td><span class="pill green">92%</span></td><td><span class="pill green">96%</span></td><td>1.72</td><td style="color:var(--green2)">7.4%</td><td><span class="pill green">A+</span></td></tr>
+            <tr><td><strong style="color:var(--text)">Dr. Khalid</strong></td><td>Surgery</td><td><span class="pill blue">78%</span></td><td><span class="pill orange">74%</span></td><td><span class="pill red">71%</span></td><td>1.34</td><td style="color:var(--green2)">8.1%</td><td><span class="pill orange">B</span></td></tr>
+            <tr><td><strong style="color:var(--text)">Dr. Nasser</strong></td><td>Orthopedics</td><td><span class="pill orange">71%</span></td><td><span class="pill orange">76%</span></td><td><span class="pill orange">79%</span></td><td>1.28</td><td style="color:var(--green2)">6.2%</td><td><span class="pill orange">B</span></td></tr>
+            <tr><td><strong style="color:var(--text)">Dr. Saeed</strong></td><td>Pediatrics</td><td><span class="pill green">84%</span></td><td><span class="pill green">89%</span></td><td><span class="pill green">95%</span></td><td>1.18</td><td style="color:var(--green2)">5.8%</td><td><span class="pill green">A</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Productivity vs Quality Score</div></div>
+          <div class="chart-container" style="height:200px"><canvas id="oppeChart" aria-label="Physician productivity vs quality">OPPE scatter data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Department Comparison</div></div>
+          <div class="chart-container" style="height:200px"><canvas id="oppeDeptChart" aria-label="Department OPPE comparison">Department OPPE</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: CMI ===== -->
+    <div id="sec-cmi" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(6,182,212,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Overall CMI</div><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--teal2)">1.42</div><div class="pill green" style="font-size:10px">Above baseline 1.0</div></div>
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Highest CMI Physician</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--blue2)">Dr. Yamani</div><div style="font-size:11px;color:var(--text3)">CMI: 1.72</div></div>
+        <div class="module-card" style="border-color:rgba(168,85,247,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Highest CMI Dept</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--purple2)">Cardiology</div><div style="font-size:11px;color:var(--text3)">CMI: 1.68</div></div>
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">High Complexity Cases</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green2)">2,840</div><div style="font-size:11px;color:var(--text3)">CMI &gt; 2.0</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">CMI by Department</div></div>
+          <div class="chart-container" style="height:230px"><canvas id="cmiDeptChart" aria-label="CMI by department">CMI department data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">CMI by Physician</div></div>
+          <div class="chart-container" style="height:230px"><canvas id="cmiPhysChart" aria-label="CMI by physician">CMI physician data</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: SURGICAL ===== -->
+    <div id="sec-surgical" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Surgical Volume</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue2)">3,840</div></div>
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Cancellation Rate</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red2)">4.8%</div><div class="pill red" style="font-size:10px">Target: &lt;3%</div></div>
+        <div class="module-card" style="border-color:rgba(245,158,11,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Post-Op Complications</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange2)">3.2%</div><div class="pill orange" style="font-size:10px">Watch</div></div>
+        <div class="module-card" style="border-color:rgba(168,85,247,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">OR Utilization</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--purple2)">78%</div><div class="pill orange" style="font-size:10px">Target: 85%</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Surgical Volume by Month</div></div>
+          <div class="chart-container" style="height:200px"><canvas id="surgChart" aria-label="Surgical volume by month">Surgery volume</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Key Surgical Metrics</div></div>
+          <div class="mini-stat"><span class="mini-stat-label">Average Surgical Wait Time</span><span class="mini-stat-val" style="color:var(--orange2)">12 days</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Operative Report Compliance</span><span class="mini-stat-val" style="color:var(--red2)">82%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Return to OR Rate</span><span class="mini-stat-val" style="color:var(--green2)">1.8%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Same-Day Surgery Rate</span><span class="mini-stat-val" style="color:var(--blue2)">34%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Emergency Surgery %</span><span class="mini-stat-val" style="color:var(--red2)">22%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: EXPERIENCE ===== -->
+    <div id="sec-experience" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Satisfaction Score</div><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--green2)">82%</div></div>
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Complaints</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red2)">184</div></div>
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Compliments</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green2)">412</div></div>
+        <div class="module-card" style="border-color:rgba(245,158,11,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Service Delay Reports</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange2)">62</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Complaints by Department</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="complaintChart" aria-label="Complaints by department">Complaints data</canvas></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Satisfaction Trend</div></div>
+          <div class="chart-container" style="height:220px"><canvas id="satisfactionChart" aria-label="Patient satisfaction trend">Satisfaction trend</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: ACCREDITATION ===== -->
+    <div id="sec-accreditation" class="section-wrap">
+      <div class="module-grid-2" style="margin-bottom:16px">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Accreditation Compliance</div></div>
+          <div class="progress-item"><div class="progress-header"><span class="progress-name">Infection Control</span><span class="progress-val" style="color:var(--green2)">97%</span></div><div class="progress-track"><div class="progress-fill" style="width:97%;background:linear-gradient(90deg,var(--green3),var(--green2))"></div></div></div>
+          <div class="progress-item"><div class="progress-header"><span class="progress-name">Medication Safety</span><span class="progress-val" style="color:var(--orange2)">88%</span></div><div class="progress-track"><div class="progress-fill" style="width:88%;background:linear-gradient(90deg,var(--orange3),var(--orange2))"></div></div></div>
+          <div class="progress-item"><div class="progress-header"><span class="progress-name">Consent Compliance</span><span class="progress-val" style="color:var(--green2)">94%</span></div><div class="progress-track"><div class="progress-fill" style="width:94%;background:linear-gradient(90deg,var(--blue3),var(--blue2))"></div></div></div>
+          <div class="progress-item"><div class="progress-header"><span class="progress-name">Credentialing Status</span><span class="progress-val" style="color:var(--green2)">100%</span></div><div class="progress-track"><div class="progress-fill" style="width:100%;background:linear-gradient(90deg,var(--green3),var(--teal2))"></div></div></div>
+          <div class="progress-item"><div class="progress-header"><span class="progress-name">Clinical Audits</span><span class="progress-val" style="color:var(--orange2)">86%</span></div><div class="progress-track"><div class="progress-fill" style="width:86%;background:linear-gradient(90deg,var(--purple3),var(--purple2))"></div></div></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Clinical Coding Accuracy</div></div>
+          <div class="mini-stat"><span class="mini-stat-label">Diagnosis Coding Accuracy</span><span class="mini-stat-val" style="color:var(--green2)">94.2%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Procedure Coding Accuracy</span><span class="mini-stat-val" style="color:var(--orange2)">91.8%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Query Response Rate</span><span class="mini-stat-val" style="color:var(--blue2)">88.4%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Documentation Deficiency Rate</span><span class="mini-stat-val" style="color:var(--red2)">12.3%</span></div>
+          <div class="mini-stat"><span class="mini-stat-label">Coder Productivity</span><span class="mini-stat-val" style="color:var(--green2)">96 rec/day</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: RESOURCES ===== -->
+    <div id="sec-resources" class="section-wrap">
+      <div class="module-grid-3" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Bed Occupancy</div><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--blue2)">84%</div><div class="pill orange" style="font-size:10px">Target: 85%</div></div>
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">ICU Utilization</div><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--red2)">91%</div><div class="pill red" style="font-size:10px">High demand</div></div>
+        <div class="module-card" style="border-color:rgba(168,85,247,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">OR Utilization</div><div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--purple2)">78%</div><div class="pill orange" style="font-size:10px">Target: 85%</div></div>
+      </div>
+      <div class="module-card">
+        <div class="section-header"><div class="section-title">Resource Utilization Trends</div></div>
+        <div class="chart-container" style="height:200px"><canvas id="resourceChart" aria-label="Resource utilization trends">Resource data</canvas></div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: ALERTS ===== -->
+    <div id="sec-alerts" class="section-wrap">
+      <div style="margin-bottom:12px">
+        <div class="alert-card danger"><div class="alert-icon">⚠</div><div style="flex:1"><div class="alert-title">High Readmission Alert — Cardiology</div><div class="alert-desc">Readmission rate in Cardiology reached 14.2%, exceeding the 10% target. Immediate review recommended.</div></div><span class="alert-time">Today</span></div>
+        <div class="alert-card danger"><div class="alert-icon">🔴</div><div style="flex:1"><div class="alert-title">Operative Report Compliance Below Target — Surgery</div><div class="alert-desc">Surgery department compliance at 82%, well below the 100% target. 630 reports missing.</div></div><span class="alert-time">Today</span></div>
+        <div class="alert-card warning"><div class="alert-icon">⚡</div><div style="flex:1"><div class="alert-title">LOS Above Benchmark — Internal Medicine</div><div class="alert-desc">Average LOS in Internal Medicine is 6.8 days vs. the 5.0-day benchmark. Long-stay cases contributing significantly.</div></div><span class="alert-time">This week</span></div>
+        <div class="alert-card warning"><div class="alert-icon">📋</div><div style="flex:1"><div class="alert-title">Lowest Documentation Compliance — Surgery (82%)</div><div class="alert-desc">Surgery department showing lowest compliance across all documentation categories. CMO intervention recommended.</div></div><span class="alert-time">This week</span></div>
+        <div class="alert-card warning"><div class="alert-icon">🏥</div><div style="flex:1"><div class="alert-title">ICU Utilization Critical — 91%</div><div class="alert-desc">ICU at 91% capacity. High risk of overflow. Review discharge eligibility and step-down protocols.</div></div><span class="alert-time">Real-time</span></div>
+        <div class="alert-card info"><div class="alert-icon">📊</div><div style="flex:1"><div class="alert-title">Highest CMI Physician — Dr. Yamani (1.72)</div><div class="alert-desc">Dr. Yamani leads in Case Mix Index, indicating management of complex cases. Benchmark for department peers.</div></div><span class="alert-time">Current</span></div>
+        <div class="alert-card info"><div class="alert-icon">🔍</div><div style="flex:1"><div class="alert-title">OR Cancellation Rate Above Target — 4.8%</div><div class="alert-desc">Surgical cancellation rate exceeds 3% target. Most common reasons: patient unfit (42%), scheduling issues (28%).</div></div><span class="alert-time">This month</span></div>
+        <div class="alert-card info"><div class="alert-icon">👥</div><div style="flex:1"><div class="alert-title">Low OPPE Score — Dr. Khalid (B Grade)</div><div class="alert-desc">Dr. Khalid in Surgery showing compliance at 71%. Performance improvement plan to be initiated.</div></div><span class="alert-time">Q4 2025</span></div>
+        <div class="alert-card success"><div class="alert-icon">✅</div><div style="flex:1"><div class="alert-title">Credentialing 100% Complete</div><div class="alert-desc">All physicians have up-to-date credentialing and privilege documentation. Accreditation standards met.</div></div><span class="alert-time">Current</span></div>
+        <div class="alert-card success"><div class="alert-icon">⭐</div><div style="flex:1"><div class="alert-title">Infection Control Compliance 97% — Excellent</div><div class="alert-desc">Infection control compliance remains above target at 97%. HAI rate monitoring continues.</div></div><span class="alert-time">This month</span></div>
+      </div>
+      <div class="module-card" style="margin-top:4px">
+        <div class="section-header"><div class="section-title">CMO Intelligence — AI Analysis</div><span class="live-badge" style="font-size:10px"><div class="live-dot"></div>Live</span></div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Ask AI for deeper insights on any indicator</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="sendPrompt('Analyze the CMO dashboard and provide a prioritized action plan for the top 3 critical issues')" style="padding:6px 12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--red2);border-radius:8px;cursor:pointer;font-size:11px;font-family:inherit">🔴 Analyze critical issues ↗</button>
+          <button onclick="sendPrompt('What are the benchmarks for hospital LOS and what strategies can reduce length of stay in Internal Medicine?')" style="padding:6px 12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:var(--orange2);border-radius:8px;cursor:pointer;font-size:11px;font-family:inherit">📅 LOS reduction strategies ↗</button>
+          <button onclick="sendPrompt('How can we improve surgical operative report compliance from 82% to 100%?')" style="padding:6px 12px;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--purple2);border-radius:8px;cursor:pointer;font-size:11px;font-family:inherit">📋 Improve compliance ↗</button>
+          <button onclick="sendPrompt('Suggest a physician performance improvement plan for doctors with OPPE grade B')" style="padding:6px 12px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--blue2);border-radius:8px;cursor:pointer;font-size:11px;font-family:inherit">👤 Physician PIP plan ↗</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: UPLOAD ===== -->
+    <div id="sec-upload" class="section-wrap">
+      <div class="module-grid-2">
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Upload Data Files</div></div>
+          <div class="upload-area" onclick="document.getElementById('fileInput2').click()" style="margin-bottom:12px">
+            <p style="font-size:32px;margin-bottom:8px">📂</p>
+            <p style="font-size:13px"><strong style="color:var(--blue2)">Click to upload or drag & drop</strong></p>
+            <p style="font-size:11px;margin-top:4px;color:var(--text3)">CSV, XLSX, JSON supported</p>
+          </div>
+          <input type="file" id="fileInput2" accept=".csv,.xlsx,.json" onchange="handleFileUpload(event)">
+          <div id="uploadStatus2" style="font-size:12px;color:var(--text3);min-height:20px"></div>
+        </div>
+        <div class="module-card">
+          <div class="section-header"><div class="section-title">Paste Data</div></div>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Paste CSV or JSON data below:</p>
+          <textarea class="data-input" id="dataInput2" style="height:140px" placeholder="Department,Visits,Admissions,LOS,CMI&#10;Internal Medicine,1200,320,4.2,1.45&#10;Surgery,890,210,3.8,1.62&#10;Cardiology,780,180,4.8,1.72&#10;Pediatrics,1020,140,3.2,1.18"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button onclick="processTextData2()" style="flex:1;padding:8px;background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(168,85,247,0.2));border:1px solid rgba(59,130,246,0.3);color:var(--blue2);border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:500">⚡ Parse & Apply</button>
+            <button onclick="clearData()" style="padding:8px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red2);border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit">✕ Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="module-card" style="margin-top:16px">
+        <div class="section-header"><div class="section-title">Column Mapping Guide</div></div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">The dashboard intelligently maps these column names from your uploaded data:</p>
+        <div class="module-grid-3" style="gap:10px">
+          <div style="background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px">
+            <div style="font-size:11px;font-weight:600;color:var(--blue2);margin-bottom:6px">VISITS / OUTPATIENTS</div>
+            <div style="font-size:11px;color:var(--text3)">visits, op_visits, outpatient_visits, total_visits, clinic_visits</div>
+          </div>
+          <div style="background:rgba(168,85,247,0.05);border:1px solid rgba(168,85,247,0.15);border-radius:8px;padding:10px">
+            <div style="font-size:11px;font-weight:600;color:var(--purple2);margin-bottom:6px">ADMISSIONS</div>
+            <div style="font-size:11px;color:var(--text3)">admissions, ip_admissions, total_admissions, admits, inpatient</div>
+          </div>
+          <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:8px;padding:10px">
+            <div style="font-size:11px;font-weight:600;color:var(--green2);margin-bottom:6px">LENGTH OF STAY</div>
+            <div style="font-size:11px;color:var(--text3)">los, length_of_stay, avg_los, alos, mean_los, days</div>
+          </div>
+          <div style="background:rgba(6,182,212,0.05);border:1px solid rgba(6,182,212,0.15);border-radius:8px;padding:10px">
+            <div style="font-size:11px;font-weight:600;color:var(--teal2);margin-bottom:6px">CASE MIX INDEX</div>
+            <div style="font-size:11px;color:var(--text3)">cmi, case_mix, case_mix_index, complexity, weight</div>
+          </div>
+          <div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:8px;padding:10px">
+            <div style="font-size:11px;font-weight:600;color:var(--orange2);margin-bottom:6px">COMPLIANCE</div>
+            <div style="font-size:11px;color:var(--text3)">compliance, compliance_pct, doc_compliance, documentation</div>
+          </div>
+          <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:10px">
+            <div style="font-size:11px;font-weight:600;color:var(--red2);margin-bottom:6px">DEPARTMENT</div>
+            <div style="font-size:11px;color:var(--text3)">dept, department, division, unit, specialty, service</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISCHARGES SECTION -->
+    <div id="sec-discharges" class="section-wrap">
+      <div class="module-grid-4" style="margin-bottom:16px">
+        <div class="module-card" style="border-color:rgba(16,185,129,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Total Discharges</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green2)">12,104</div></div>
+        <div class="module-card" style="border-color:rgba(59,130,246,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Discharge vs Admission</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue2)">97.4%</div><div class="pill green">Balanced</div></div>
+        <div class="module-card" style="border-color:rgba(245,158,11,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Avg Daily Discharges</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange2)">33</div></div>
+        <div class="module-card" style="border-color:rgba(239,68,68,0.3)"><div class="kpi-label" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">DAMA</div><div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--red2)">142</div><div class="pill red">Monitor</div></div>
+      </div>
+      <div class="module-grid-2">
+        <div class="module-card"><div class="section-header"><div class="section-title">Discharges by Department</div></div><div class="chart-container" style="height:220px"><canvas id="disDeptChart" aria-label="Discharges by department">Discharge data</canvas></div></div>
+        <div class="module-card"><div class="section-header"><div class="section-title">Discharge Trend</div></div><div class="chart-container" style="height:220px"><canvas id="disTrendChart" aria-label="Discharge trend">Discharge trend</canvas></div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DEPTS=['Internal Med','Surgery','Cardiology','Pediatrics','Ortho','OB/GYN','ICU','ED'];
+const PHYS=['Dr. Al-Rashidi','Dr. Yamani','Dr. Khalid','Dr. Nasser','Dr. Saeed'];
+const charts={};
+
+function mkChart(id,cfg){
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(el,cfg);
+}
+
+const gridColor='rgba(255,255,255,0.06)';
+const tickColor='rgba(255,255,255,0.35)';
+const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10}}},y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10}}}}};
+
+function initAllCharts(){
+  mkChart('trendChart',{type:'line',data:{labels:MONTHS,datasets:[{label:'OP',data:[3800,4100,4250,4180,4320,4100,4280,4380,4100,4240,4180,4310],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#3b82f6'},{label:'IP',data:[980,1020,1050,1010,1080,1020,1060,1090,1000,1040,1010,1070],borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,0.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#a855f7'}]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:10},boxWidth:10}}}}});
+
+  mkChart('deptChart',{type:'doughnut',data:{labels:DEPTS,datasets:[{data:[9800,7200,6800,8400,5200,4100,2800,3940],backgroundColor:['#3b82f6','#a855f7','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899','#8b5cf6'],borderWidth:2,borderColor:'#0d1117'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:tickColor,font:{size:9},boxWidth:8,padding:8}}}}});
+
+  mkChart('admTypeChart',{type:'doughnut',data:{labels:['Emergency','Elective','Urgent'],datasets:[{data:[3720,6840,1870],backgroundColor:['#ef4444','#3b82f6','#f59e0b'],borderWidth:2,borderColor:'#0d1117'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:10},boxWidth:8}}}}});
+
+  mkChart('losChart',{type:'bar',data:{labels:['Int Med','Surgery','Cardio','Peds','Ortho','OB/GYN'],datasets:[{data:[6.8,5.2,4.8,3.4,3.8,2.9],backgroundColor:['#ef4444','#f59e0b','#f59e0b','#10b981','#10b981','#3b82f6'],borderRadius:4}]},options:{...baseOpts,plugins:{legend:{display:false}}}});
+
+  mkChart('opDeptChart',{type:'bar',data:{labels:DEPTS,datasets:[{data:[12400,8900,9800,11200,7200,6100,2400,4940],backgroundColor:'rgba(59,130,246,0.7)',borderColor:'#3b82f6',borderWidth:1,borderRadius:6}]},options:baseOpts});
+
+  mkChart('opTrendChart',{type:'line',data:{labels:MONTHS,datasets:[{data:[3800,4100,4250,4180,4320,4100,4280,4380,4100,4240,4180,4310],borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.1)',fill:true,tension:0.4,pointRadius:3}]},options:baseOpts});
+
+  mkChart('admDeptChart',{type:'bar',data:{labels:DEPTS,datasets:[{data:[3200,2100,1800,1400,1200,980,420,1330],backgroundColor:'rgba(168,85,247,0.7)',borderColor:'#a855f7',borderWidth:1,borderRadius:6}]},options:baseOpts});
+
+  mkChart('admTypeChart2',{type:'pie',data:{labels:['Emergency','Elective','Urgent','Transfer'],datasets:[{data:[3720,6840,1870,0],backgroundColor:['#ef4444','#3b82f6','#f59e0b','#10b981'],borderWidth:2,borderColor:'#0d1117'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:10},boxWidth:8}}}}});
+
+  mkChart('admTrendChart',{type:'line',data:{labels:MONTHS,datasets:[{data:[980,1020,1050,1010,1080,1020,1060,1090,1000,1040,1010,1070],borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,0.1)',fill:true,tension:0.4,pointRadius:3}]},options:baseOpts});
+
+  mkChart('losTrendChart',{type:'line',data:{labels:MONTHS,datasets:[{label:'Actual',data:[4.8,4.6,4.4,4.5,4.2,4.3,4.1,4.0,4.2,4.3,4.1,4.2],borderColor:'#a855f7',tension:0.4,pointRadius:3},{label:'Benchmark',data:[4.5,4.5,4.5,4.5,4.5,4.5,4.5,4.5,4.5,4.5,4.5,4.5],borderColor:'#ef4444',borderDash:[5,5],pointRadius:0}]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:10},boxWidth:10}}}}});
+
+  mkChart('complianceChart',{type:'bar',data:{labels:DEPTS,datasets:[{label:'Compliance',data:[96,82,94,98,91,95,97,88],backgroundColor:ctx=>ctx.parsed.y>=95?'rgba(16,185,129,0.7)':ctx.parsed.y>=85?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)',borderRadius:4},{label:'Target',data:[95,95,95,95,95,95,95,95],type:'line',borderColor:'rgba(239,68,68,0.5)',borderDash:[5,5],pointRadius:0,fill:false}]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:10},boxWidth:10}}}}});
+
+  mkChart('adverseChart',{type:'doughnut',data:{labels:['Medication Errors','Patient Falls','Pressure Injuries','HAI','Adverse Drug','Other'],datasets:[{data:[34,22,15,18,28,12],backgroundColor:['#ef4444','#3b82f6','#a855f7','#f59e0b','#06b6d4','#8b5cf6'],borderWidth:2,borderColor:'#0d1117'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:tickColor,font:{size:9},boxWidth:8,padding:6}}}}});
+
+  mkChart('edWaitChart',{type:'bar',data:{labels:['<15m','15-30m','30-45m','45-60m','60-90m','>90m'],datasets:[{data:[4200,5800,4100,2400,1600,540],backgroundColor:['#10b981','#3b82f6','#f59e0b','#f97316','#ef4444','#dc2626'],borderRadius:4}]},options:baseOpts});
+
+  mkChart('oppeChart',{type:'bar',data:{labels:PHYS,datasets:[{label:'Productivity',data:[92,87,78,71,84],backgroundColor:'rgba(59,130,246,0.7)',borderRadius:4},{label:'Quality',data:[88,92,74,76,89],backgroundColor:'rgba(168,85,247,0.7)',borderRadius:4}]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:9},boxWidth:8}}}}});
+
+  mkChart('oppeDeptChart',{type:'radar',data:{labels:['Productivity','Quality','Compliance','CMI','Satisfaction'],datasets:[{label:'Surgery',data:[78,74,71,67,72],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)'},{label:'Cardiology',data:[87,92,96,86,88],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:9},boxWidth:8}}},scales:{r:{grid:{color:gridColor},pointLabels:{color:tickColor,font:{size:9}},ticks:{color:tickColor,font:{size:8},backdropColor:'transparent'}}}}});
+
+  mkChart('cmiDeptChart',{type:'bar',data:{labels:DEPTS,datasets:[{data:[1.45,1.62,1.72,1.18,1.34,1.28,2.14,1.38],backgroundColor:ctx=>ctx.parsed.y>=1.5?'rgba(6,182,212,0.8)':ctx.parsed.y>=1.2?'rgba(59,130,246,0.8)':'rgba(168,85,247,0.8)',borderRadius:4}]},options:baseOpts});
+
+  mkChart('cmiPhysChart',{type:'horizontalBar',type:'bar',data:{labels:PHYS,datasets:[{data:[1.58,1.72,1.34,1.28,1.18],backgroundColor:['#3b82f6','#06b6d4','#a855f7','#f59e0b','#10b981'],borderRadius:4}]},options:{...baseOpts,indexAxis:'y'}});
+
+  mkChart('surgChart',{type:'bar',data:{labels:MONTHS,datasets:[{data:[280,310,340,320,360,300,350,380,320,340,310,330],backgroundColor:'rgba(59,130,246,0.6)',borderColor:'#3b82f6',borderWidth:1,borderRadius:4}]},options:baseOpts});
+
+  mkChart('complaintChart',{type:'bar',data:{labels:DEPTS,datasets:[{data:[42,38,22,18,24,14,8,18],backgroundColor:'rgba(239,68,68,0.7)',borderRadius:4}]},options:baseOpts});
+
+  mkChart('satisfactionChart',{type:'line',data:{labels:MONTHS,datasets:[{data:[79,80,81,80,82,83,82,84,83,82,81,82],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:3}]},options:baseOpts});
+
+  mkChart('resourceChart',{type:'line',data:{labels:MONTHS,datasets:[{label:'Bed Occ',data:[81,82,84,83,85,84,86,88,85,84,83,84],borderColor:'#3b82f6',tension:0.4},{label:'ICU',data:[86,88,90,89,91,90,92,94,91,90,89,91],borderColor:'#ef4444',tension:0.4},{label:'OR',data:[74,76,78,77,79,78,80,82,79,78,77,78],borderColor:'#a855f7',tension:0.4}]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:9},boxWidth:8}}}}});
+
+  mkChart('umrahNatChart',{type:'doughnut',data:{labels:['Indonesian','Pakistani','Egyptian','Bangladeshi','Indian','Malaysian','Turkish','Other'],datasets:[{data:[2840,1620,820,740,580,420,380,1020],backgroundColor:['#3b82f6','#10b981','#a855f7','#f59e0b','#06b6d4','#ec4899','#8b5cf6','#6b7280'],borderWidth:2,borderColor:'#0d1117'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:tickColor,font:{size:9},boxWidth:8,padding:6}}}}});
+
+  mkChart('umrahTrendChart',{type:'bar',data:{labels:MONTHS,datasets:[{label:'OP',data:[420,520,840,680,540,480,620,840,980,620,440,260],backgroundColor:'rgba(245,158,11,0.7)',borderRadius:4},{label:'IP',data:[60,80,160,120,100,80,120,180,240,140,80,40],backgroundColor:'rgba(168,85,247,0.7)',borderRadius:4}]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:tickColor,font:{size:9},boxWidth:8}}}}});
+
+  mkChart('disDeptChart',{type:'bar',data:{labels:DEPTS,datasets:[{data:[3120,2060,1760,1380,1180,960,410,1234],backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}]},options:baseOpts});
+
+  mkChart('disTrendChart',{type:'line',data:{labels:MONTHS,datasets:[{data:[960,1000,1030,990,1060,1000,1040,1070,980,1020,990,1050],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:3}]},options:baseOpts});
+}
+
+function showSection(id,el){
+  document.querySelectorAll('.section-wrap').forEach(s=>s.classList.remove('visible'));
+  const target=document.getElementById('sec-'+id);
+  if(target){target.classList.add('visible');setTimeout(()=>initSectionCharts(id),50)}
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+}
+
+function initSectionCharts(id){
+  const chartMap={
+    overview:['trendChart','deptChart','admTypeChart','losChart'],
+    outpatients:['opDeptChart','opTrendChart'],
+    admissions:['admDeptChart','admTypeChart2','admTrendChart'],
+    los:['losTrendChart'],
+    umrah:['umrahNatChart','umrahTrendChart'],
+    documentation:['complianceChart'],
+    quality:['adverseChart'],
+    ed:['edWaitChart'],
+    oppe:['oppeChart','oppeDeptChart'],
+    cmi:['cmiDeptChart','cmiPhysChart'],
+    surgical:['surgChart'],
+    experience:['complaintChart','satisfactionChart'],
+    resources:['resourceChart'],
+    discharges:['disDeptChart','disTrendChart'],
+  };
+  if(chartMap[id])chartMap[id].forEach(c=>{const el=document.getElementById(c);if(el&&!charts[c])initAllCharts()});
+}
+
+function toggleUpload(){
+  const p=document.getElementById('uploadPanel');
+  p.classList.toggle('visible');
+}
+
+function handleFileUpload(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const statusId=e.target.id==='fileInput'?'uploadStatus':'uploadStatus2';
+  document.getElementById(statusId).textContent='⏳ Reading '+file.name+'...';
+  const reader=new FileReader();
+  reader.onload=function(evt){
+    const text=evt.target.result;
+    parseAndApply(text,statusId);
+  };
+  reader.readAsText(file);
+}
+
+function processTextData(){
+  const text=document.getElementById('dataInput').value;
+  parseAndApply(text,'uploadStatus');
+}
+function processTextData2(){
+  const text=document.getElementById('dataInput2').value;
+  parseAndApply(text,'uploadStatus2');
+}
+
+function parseAndApply(text,statusId){
+  if(!text.trim()){document.getElementById(statusId).textContent='⚠ No data entered.';return}
+  try{
+    const lines=text.trim().split('\n');
+    const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z0-9_]/g,'_'));
+    const colMap={dept:findCol(headers,['dept','department','division','unit','specialty']),visits:findCol(headers,['visits','op_visits','outpatient','total_visits','clinic']),admissions:findCol(headers,['admissions','admits','ip_admissions','inpatient']),los:findCol(headers,['los','length_of_stay','avg_los','alos','days']),cmi:findCol(headers,['cmi','case_mix','complexity','weight']),compliance:findCol(headers,['compliance','doc_compliance','documentation'])};
+    const rows=[];
+    for(let i=1;i<lines.length;i++){
+      if(!lines[i].trim())continue;
+      const vals=lines[i].split(',').map(v=>v.trim());
+      const row={};
+      Object.entries(colMap).forEach(([k,idx])=>{if(idx>=0)row[k]=vals[idx]});
+      if(Object.keys(row).length>0)rows.push(row);
+    }
+    if(rows.length===0){document.getElementById(statusId).textContent='⚠ Could not parse data. Check format.';return}
+    applyDataToKPIs(rows);
+    document.getElementById(statusId).textContent='✅ Successfully applied '+rows.length+' records from '+lines[0];
+    refreshDashboard();
+  }catch(err){document.getElementById(statusId).textContent='⚠ Parse error: '+err.message}
+}
+
+function findCol(headers,variants){return headers.findIndex(h=>variants.some(v=>h.includes(v)))}
+
+function applyDataToKPIs(rows){
+  const visits=rows.reduce((s,r)=>s+(parseFloat(r.visits)||0),0);
+  const admissions=rows.reduce((s,r)=>s+(parseFloat(r.admissions)||0),0);
+  const losVals=rows.filter(r=>r.los).map(r=>parseFloat(r.los)).filter(v=>!isNaN(v));
+  const avgLos=losVals.length?losVals.reduce((a,b)=>a+b,0)/losVals.length:null;
+  const cmiVals=rows.filter(r=>r.cmi).map(r=>parseFloat(r.cmi)).filter(v=>!isNaN(v));
+  const avgCmi=cmiVals.length?cmiVals.reduce((a,b)=>a+b,0)/cmiVals.length:null;
+  const compVals=rows.filter(r=>r.compliance).map(r=>parseFloat(r.compliance)).filter(v=>!isNaN(v));
+  const avgComp=compVals.length?compVals.reduce((a,b)=>a+b,0)/compVals.length:null;
+  if(visits>0)document.getElementById('kpi-op').textContent=visits.toLocaleString();
+  if(admissions>0)document.getElementById('kpi-adm').textContent=admissions.toLocaleString();
+  if(avgLos)document.getElementById('kpi-los').textContent=avgLos.toFixed(1);
+  if(avgCmi)document.getElementById('kpi-cmi').textContent=avgCmi.toFixed(2);
+  if(avgComp)document.getElementById('kpi-comp').textContent=Math.round(avgComp)+'%';
+}
+
+function refreshDashboard(){
+  Object.values(charts).forEach(c=>{try{c.destroy()}catch(e){}});
+  Object.keys(charts).forEach(k=>delete charts[k]);
+  initAllCharts();
+  const btn=document.querySelector('.update-btn');
+  btn.textContent='✓ Updated!';
+  btn.style.background='linear-gradient(135deg,var(--green3),var(--green))';
+  setTimeout(()=>{btn.textContent='↻ Update Dashboard';btn.style.background='linear-gradient(135deg,var(--blue3),var(--purple3))'},2000);
+}
+
+function clearData(){
+  document.getElementById('dataInput2').value='';
+  document.getElementById('uploadStatus2').textContent='';
+}
+
+function updateDatetime(){
+  const now=new Date();
+  document.getElementById('datetime-display').innerHTML=now.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'})+'<br>'+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+updateDatetime();
+setInterval(updateDatetime,1000);
+
+window.addEventListener('load',()=>{
+  setTimeout(initAllCharts,200);
+});
+</script>
+</body>
+</html>
